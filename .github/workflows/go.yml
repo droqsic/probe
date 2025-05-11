@@ -1,0 +1,59 @@
+name: Go
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go: ["1.24"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Cache Go build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Verify go.mod tidy
+        run: |
+          go mod tidy
+          git diff --exit-code || (echo "Run 'go mod tidy'" && exit 1)
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: go test -v ./tests/integration/
+
+      - name: Benchmark
+        run: |
+          if [[ "$CI" == "true" ]]; then
+            go test -v -bench=. ./tests/benchmark/...
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Lint
+        run: |
+          go fmt ./...
+          go vet ./...
