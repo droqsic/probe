@@ -46,9 +46,10 @@ jobs:
 
       - name: Benchmark
         run: |
-          if [[ "$CI" == "true" ]]; then
+          if ($env:CI -eq "true") {
             go test -v -bench=. ./tests/benchmark/...
-          fi
+          }
+        shell: pwsh
 
       - name: Vet
         run: go vet ./...
