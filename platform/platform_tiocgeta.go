@@ -1,5 +1,5 @@
-//go:build darwin || freebsd || openbsd || netbsd || dragonfly || hurd || zos
-// +build darwin freebsd openbsd netbsd dragonfly hurd zos
+//go:build darwin || freebsd || openbsd || netbsd || dragonfly || hurd || zos || ios
+// +build darwin freebsd openbsd netbsd dragonfly hurd zos ios
 
 package platform
 

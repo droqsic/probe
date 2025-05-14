@@ -8,7 +8,7 @@ package probe
 const (
 	Name        = "Probe"
 	Description = "A library to detect if a file descriptor is a terminal."
-	Version     = "1.0.0"
+	Version     = "1.0.1"
 	License     = "MIT"
 	RequireGo   = "1.24"
 	Author      = "Usama Arshad"

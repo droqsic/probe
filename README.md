@@ -11,16 +11,16 @@
 
 </div>
 
-A lightweight, cross-platform Go library to detect if a file descriptor is connected to a terminal. Probe offers superior performance with a sophisticated caching mechanism, making it up to 44x faster than alternatives.
+Probe is a lightweight, cross-platform Go library for detecting whether a file descriptor is connected to a terminal. It is designed for high performance, thread safety, and ease of use in modern Go applications.
 
 ## Features
 
-- **High Performance**: Optimized caching mechanism makes repeated checks nearly instantaneous
-- **Cross-Platform**: Works on all major platforms including Windows, macOS, Linux, BSD, and more
-- **Zero Allocations**: Makes no memory allocations for any operations
-- **Thread-Safe**: Designed for concurrent access from multiple goroutines
-- **Simple API**: Clean, intuitive interface that's easy to integrate
-- **Minimal Dependencies**: Only depends on standard library and x/sys
+- ⚡ **High Performance** — Fast terminal detection with intelligent result caching
+- 🌍 **Cross-Platform** — Works seamlessly on Windows, macOS, Linux, BSD, and more
+- 🧵 **Thread-Safe** — Fully safe for concurrent use across goroutines
+- 🧠 **Zero Allocations** — Designed to avoid heap allocations entirely
+- 🧩 **Minimal Dependencies** — Built using only the Go standard library and x/sys
+- 🧼 **Simple API** — Clean and intuitive interface for fast integration
 
 ## Installation
 
@@ -55,72 +55,64 @@ func main() {
 }
 ```
 
+## Performance
+
+Probe is engineered for speed. Its caching layer makes repeated checks on the same file descriptor nearly instantaneous. Here are benchmark results under typical usage:
+
+```
+BenchmarkIsTerminal-12                                 	89545555	        13.61 ns/op	       0 B/op	       0 allocs/op
+BenchmarkIsCygwinTerminal-12                           	89867444	        13.68 ns/op	       0 B/op	       0 allocs/op
+BenchmarkIsTerminalCached-12                           	88727863	        13.69 ns/op	       0 B/op	       0 allocs/op
+BenchmarkIsCygwinTerminalCached-12                     	89356854	        13.71 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMultipleFileDescriptors-12                    	28130515	        43.18 ns/op	       0 B/op	       0 allocs/op
+```
+
+These results demonstrate Probe's ultra-low overhead and suitability for high-throughput applications.
+
 ## How It Works
 
-Probe uses platform-specific mechanisms to detect terminals:
+Probe uses platform-specific mechanisms for terminal detection:
 
 - **Unix-like systems**: Uses appropriate ioctl calls (`TIOCGETA`, `TCGETS`, or `TCGETA`)
 - **Windows**: Uses the Win32 `GetConsoleMode` function
 - **Cygwin/MSYS2**: Detects special named pipes used by Cygwin terminals
 
-Results are cached for performance, making repeated checks on the same file descriptor extremely fast.
-
-## Performance
-
-Terminal detection can be an expensive operation. Probe implements an efficient caching mechanism that makes subsequent checks nearly instantaneous.
-
-### Benchmark Comparison
-
-```
-BenchmarkProbeIsTerminal-12           81792342        13.68 ns/op        0 B/op        0 allocs/op
-BenchmarkIsattyIsTerminal-12           2012518       608.60 ns/op        0 B/op        0 allocs/op
-BenchmarkProbeCachedIsTerminal-12     89733715        13.57 ns/op        0 B/op        0 allocs/op
-BenchmarkIsattyCachedIsTerminal-12     1990125       588.90 ns/op        0 B/op        0 allocs/op
-BenchmarkProbeIsCygwinTerminal-12     88964013        13.73 ns/op        0 B/op        0 allocs/op
-BenchmarkIsattyIsCygwinTerminal-12     1340991       887.20 ns/op       64 B/op        2 allocs/op
-```
-
-Key observations:
-
-- Probe's terminal detection is **44x faster** than alternatives
-- Probe's Cygwin terminal detection is **64x faster** than alternatives
-- Probe makes **zero memory allocations** for all operations
-
-For a detailed comparison with other libraries, see [COMPARISON.md](docs/COMPARISON.md).
+All results are cached after the first check per file descriptor to avoid repeated syscalls.
 
 ## Supported Platforms
 
-| Platform        | Support | Implementation   |
-| --------------- | ------- | ---------------- |
-| Windows         | ✅      | `GetConsoleMode` |
-| macOS           | ✅      | `TIOCGETA` ioctl |
-| Linux           | ✅      | `TCGETS` ioctl   |
-| FreeBSD         | ✅      | `TIOCGETA` ioctl |
-| OpenBSD         | ✅      | `TIOCGETA` ioctl |
-| NetBSD          | ✅      | `TIOCGETA` ioctl |
-| Solaris/Illumos | ✅      | `TCGETA` ioctl   |
-| AIX             | ✅      | `TCGETA` ioctl   |
-| z/OS            | ✅      | `TIOCGETA` ioctl |
-| Plan9           | ✅      | `Fd2path`        |
-| Android         | ✅      | `TCGETS` ioctl   |
-| iOS             | ✅      | `TIOCGETA` ioctl |
-| Hurd            | ✅      | `TIOCGETA` ioctl |
+| Platform       | Support | Implementation    |
+| -------------- | ------- | ----------------- |
+| Windows        | ✅      | `GetConsoleMode`  |
+| Linux          | ✅      | `TCGETS` ioctl    |
+| Android        | ✅      | `TCGETS` ioctl    |
+| macOS (Darwin) | ✅      | `TIOCGETA` ioctl  |
+| iOS            | ✅      | `TIOCGETA` ioctl  |
+| FreeBSD        | ✅      | `TIOCGETA` ioctl  |
+| OpenBSD        | ✅      | `TIOCGETA` ioctl  |
+| NetBSD         | ✅      | `TIOCGETA` ioctl  |
+| DragonFly BSD  | ✅      | `TIOCGETA` ioctl  |
+| Hurd           | ✅      | `TIOCGETA` ioctl  |
+| z/OS           | ✅      | `TIOCGETA` ioctl  |
+| Solaris        | ✅      | `TCGETA` ioctl    |
+| Illumos        | ✅      | `TCGETA` ioctl    |
+| Haikou         | ✅      | `TCGETA` ioctl    |
+| AIX            | ✅      | `TCGETA` ioctl    |
+| Plan9          | ✅      | `Fd2path`         |
+| WebAssembly    | ✅      | Node.js detection |
 
 Other platforms will compile but terminal detection will always return `false`.
 
 ## Thread Safety
 
-Probe is designed with concurrency in mind. The library implements a synchronization mechanism using read-write mutexes to protect its internal cache, allowing for high-throughput concurrent access patterns common in modern Go applications.
-
-The caching layer is optimized for read-heavy workloads typical of terminal detection scenarios. By using a read-write mutex, Probe allows multiple goroutines to read from the cache simultaneously, only blocking when the cache needs to be updated.
+Probe is built with concurrency in mind. It uses a read-write mutex to protect its internal cache, allowing many goroutines to read in parallel while safely handling updates. The design ensures scalability and efficiency for read-heavy workloads.
 
 ## Contributing
 
-Contributions to Probe are warmly welcomed. Whether you're fixing a bug, adding a feature, or improving documentation, your help makes this project better for everyone.
+Contributions are welcome! Whether you're fixing bugs, adding features, or improving documentation, your input helps make Probe better for everyone.
 
-Please see our [Contributing Guidelines](docs/CONTRIBUTING.md) for details on how to contribute.
-
-All contributors are expected to adhere to our [Code of Conduct](docs/CODE_OF_CONDUCT.md).
+- Read the [Contributing Guidelines](docs/CONTRIBUTING.md)
+- Follow the [Code of Conduct](docs/CODE_OF_CONDUCT.md)
 
 ## License
 
@@ -128,10 +120,10 @@ Probe is released under the MIT License. For the full license text, please see t
 
 ## Acknowledgements
 
-Probe was inspired by [go-isatty](https://github.com/mattn/go-isatty), created by Yasuhiro Matsumoto. While reimplementing the core functionality, Probe introduces significant performance optimizations and a more efficient caching mechanism.
+Probe is inspired by [go-isatty](https://github.com/mattn/go-isatty) by Yasuhiro Matsumoto. While conceptually similar, Probe provides an enhanced implementation focused on performance and scalability.
 
 Special thanks to:
 
-- The Go team for creating such an excellent programming language
-- The maintainers of the x/sys package for providing the low-level system interfaces
-- All contributors who have helped improve this project
+- The Go team for their exceptional language and tooling
+- The maintainers of x/sys for low-level system access
+- All contributors who help make Probe better
