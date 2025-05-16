@@ -60,11 +60,8 @@ func main() {
 Probe is engineered for speed. Its caching layer makes repeated checks on the same file descriptor nearly instantaneous. Here are benchmark results under typical usage:
 
 ```
-BenchmarkIsTerminal-12                                 	89545555	        13.61 ns/op	       0 B/op	       0 allocs/op
-BenchmarkIsCygwinTerminal-12                           	89867444	        13.68 ns/op	       0 B/op	       0 allocs/op
-BenchmarkIsTerminalCached-12                           	88727863	        13.69 ns/op	       0 B/op	       0 allocs/op
-BenchmarkIsCygwinTerminalCached-12                     	89356854	        13.71 ns/op	       0 B/op	       0 allocs/op
-BenchmarkMultipleFileDescriptors-12                    	28130515	        43.18 ns/op	       0 B/op	       0 allocs/op
+BenchmarkIsTerminal                       89545555	        13.61 ns/op	       0 B/op	      0 allocs/op
+BenchmarkIsCygwinTerminal                 89867444	        13.68 ns/op	       0 B/op	      0 allocs/op
 ```
 
 These results demonstrate Probe's ultra-low overhead and suitability for high-throughput applications.
@@ -76,6 +73,8 @@ Probe uses platform-specific mechanisms for terminal detection:
 - **Unix-like systems**: Uses appropriate ioctl calls (`TIOCGETA`, `TCGETS`, or `TCGETA`)
 - **Windows**: Uses the Win32 `GetConsoleMode` function
 - **Cygwin/MSYS2**: Detects special named pipes used by Cygwin terminals
+- **WebAssembly**: Detects terminals based on Node.js environment variables
+- **Other platforms**: Always returns `false`
 
 All results are cached after the first check per file descriptor to avoid repeated syscalls.
 
