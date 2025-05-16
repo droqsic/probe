@@ -11,65 +11,91 @@ import (
 // BenchmarkPlatformSpecific runs benchmarks specific to the current platform
 func BenchmarkPlatformSpecific(b *testing.B) {
 	fd := os.Stdout.Fd()
+	runPlatformSpecificBenchmarks(b, fd)
+}
 
+// runPlatformSpecificBenchmarks runs the appropriate benchmarks for the current platform
+func runPlatformSpecificBenchmarks(b *testing.B, fd uintptr) {
 	switch runtime.GOOS {
 	case "windows":
-		b.Run("windows-terminal", func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				probe.IsTerminal(fd)
-			}
-		})
-
-		b.Run("windows-cygwin", func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				probe.IsCygwinTerminal(fd)
-			}
-		})
-
+		runWindowsBenchmarks(b, fd)
 	case "linux", "android":
-		b.Run("linux-tcgets", func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				probe.IsTerminal(fd)
-			}
-		})
-
+		runLinuxBenchmarks(b, fd)
 	case "darwin", "freebsd", "openbsd", "netbsd", "dragonfly":
-		b.Run("bsd-tiocgeta", func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				probe.IsTerminal(fd)
-			}
-		})
-
+		runBSDBenchmarks(b, fd)
 	case "solaris", "illumos", "haikou":
-		b.Run("solaris-tcgeta", func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				probe.IsTerminal(fd)
-			}
-		})
-
+		runSolarisBenchmarks(b, fd)
 	case "plan9":
-		b.Run("plan9-fd2path", func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				probe.IsTerminal(fd)
-			}
-		})
-
+		runPlan9Benchmarks(b, fd)
 	case "js":
-		if runtime.GOARCH == "wasm" {
-			b.Run("wasm", func(b *testing.B) {
-				for i := 0; i < b.N; i++ {
-					probe.IsTerminal(fd)
-				}
-			})
-		}
-
+		runJSBenchmarks(b, fd)
 	default:
-		b.Run("generic", func(b *testing.B) {
+		runGenericBenchmarks(b, fd)
+	}
+}
+
+func runWindowsBenchmarks(b *testing.B, fd uintptr) {
+	b.Run("windows-terminal", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			probe.IsTerminal(fd)
+		}
+	})
+
+	b.Run("windows-cygwin", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			probe.IsCygwinTerminal(fd)
+		}
+	})
+}
+
+func runLinuxBenchmarks(b *testing.B, fd uintptr) {
+	b.Run("linux-tcgets", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			probe.IsTerminal(fd)
+		}
+	})
+}
+
+func runBSDBenchmarks(b *testing.B, fd uintptr) {
+	b.Run("bsd-tiocgeta", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			probe.IsTerminal(fd)
+		}
+	})
+}
+
+func runSolarisBenchmarks(b *testing.B, fd uintptr) {
+	b.Run("solaris-tcgeta", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			probe.IsTerminal(fd)
+		}
+	})
+}
+
+func runPlan9Benchmarks(b *testing.B, fd uintptr) {
+	b.Run("plan9-fd2path", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			probe.IsTerminal(fd)
+		}
+	})
+}
+
+func runJSBenchmarks(b *testing.B, fd uintptr) {
+	if runtime.GOARCH == "wasm" {
+		b.Run("wasm", func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				probe.IsTerminal(fd)
 			}
 		})
 	}
+}
+
+func runGenericBenchmarks(b *testing.B, fd uintptr) {
+	b.Run("generic", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			probe.IsTerminal(fd)
+		}
+	})
 }
 
 // BenchmarkPlatformComparison compares performance across different operations on the current platform
